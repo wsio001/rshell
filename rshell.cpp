@@ -166,8 +166,7 @@ int main()
 	{
 		command.erase(command.find('#'),(command.size() - command.find('#')));//delete everything after # since anything after # is comment
 	}
-	
-	con_vec(command, connector_v);
+		
 	int counter = 0;//to see if there is any -1 in the connector vector, if there is, give out a error message.
 	for (int i = 0; i < connector_v.size(); i++) // test to see if the con_vec funtion is working
 	{
@@ -207,6 +206,18 @@ int main()
 	{
 		cout << command_v.at(i) << endl;
 	}
+	
+	if (connector_v.empty())// if it is single command, then just push back and run it and return.
+	{
+		vector <char*> noconnect_v;
+		noconnect_v.push_back(command_v.at(0));
+		noconnect_v.push_back(NULL);
+		char** noconnect;
+		noconnect = &noconnect_v[0];
+		run(noconnect[0], noconnect);
+		return 0;
+	}
+		
 
 	int status = 0;
 	bool firstcommand = true;
@@ -215,8 +226,10 @@ int main()
 	int j = 0;
 	temp_v.push_back(command_v.at(j));//push back the first command anyways
 	j++;//now J is 1
-	for(int i = 0; (i != connector_v.size() && j != command_v.size()); i++)
+	char** temp_com;
+	for(int i = 0; (i < connector_v.size() && j < command_v.size()); i++)
 	{
+		
 		if(connector_v.at(i) == 0)
 		{
 			temp_v.push_back(command_v.at(j));//if it is space, add the next command as the parameter
@@ -224,17 +237,19 @@ int main()
 		}
 		else if (connector_v.at(i) == 1)
 		{
-			char** temp_com;
 			if(firstcommand)
 			{
+				temp_v.push_back(NULL);
 				temp_com = &temp_v[0];//if it is the first command
+				cout << temp_v.at(i) << endl << "////////////" << endl;
 				status = run(temp_com[0], temp_com);//run the command that is in the temp_v already, and check the status
 				firstcommand = false;
 			}
 			if(status == -1)
 			{
 				temp_v.clear();
-				temp_v.push_back.(command_v.at(j));
+				temp_v.push_back(command_v.at(j));
+				temp_v.push_back(NULL);
 				j++;
 				temp_com = &temp_v[0];
 				status = run(temp_com[0], temp_com);//if status is -1, run the next command, and set the status
@@ -244,26 +259,28 @@ int main()
 				j++;
 			}	
 		}
-		else if (connector_v.at(i) == 2);
+		else if (connector_v.at(i) == 2)
 		{
-			char** temp_com;
 			if(firstcommand)
 			{
+				temp_v.push_back(NULL);
 				temp_com = &temp_v[0];//if it is the first command 
 				status = run(temp_com[0],temp_com);//run the commmand that is in the temp_v already, no need to check status
 				firstcommand = false;
 			}
 			temp_v.clear();//clear the temp_v;
 			temp_v.push_back(command_v.at(j));
+			temp_v.push_back(NULL);
 			j++;
 			temp_com = &temp_v[0];
 			status = run(temp_com[0], temp_com);//run the next command, and set the status
 		}
+
 		else if (connector_v.at(i) == 3)
 		{
-			char** temp_com;
 			if(firstcommand)
 			{
+				temp_v.push_back(NULL);
 				temp_com = &temp_v[0];
 				status = run (temp_com[0], temp_com);	
 				firstcommand = false;
@@ -272,18 +289,21 @@ int main()
 			{
 				temp_v.clear();
 				temp_v.push_back(command_v.at(j));
+				temp_v.push_back(NULL);
 				j++;
 				temp_com = &temp_v[0];
 				status = run(temp_com[0], temp_com); // run the next command, and set the status
 			}
-			if(status == -1)
+			else if(status == -1)
 			{
 				j++;
 			}
 		}
-		
-		
+		return 0;
 	}
+	temp_v.push_back(NULL);
+	temp_com = &temp_v[0];
+	status = run(temp_com[0], temp_com);
 	return 0;
 }	
 	
