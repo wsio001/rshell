@@ -16,7 +16,6 @@ void con_vec (string command, vector <int> &empty_v)
 //1 means ||
 //3 means &&
 //2 means ;
-//4 means #
 //0 means SPACE
 //-1 means fail
 
@@ -30,7 +29,10 @@ void con_vec (string command, vector <int> &empty_v)
 	for (int i = 0; i < command.size(); ++i)
 	{
 		if (i == command.size() - 1)
-		{	
+		{	if (command.at(i) == ' ')
+			{
+				return;
+			}
 			if (command.at(i) == ';' ||  command.at(i) == '|' || command.at(i) == '&')
 			{
 				empty_v.push_back(-1); // -1 means error;
@@ -103,12 +105,6 @@ void con_vec (string command, vector <int> &empty_v)
 			}
 		}
 		
-		else if (command.at(i) == '#')
-		{
-			empty_v.push_back(4);
-			return; //we know that # means comment, so we do not read anytning after #, so return
-		}
-		
 		else if (command.at(i) == ' ')
 		{
 			if((command.at(i + 1) != '#' && command.at(i + 1) != ';' &&  command.at(i + 1) != '|' && command.at(i + 1) != '&')&&(command.at(i - 1) != '#' && command.at(i - 1) != ';' &&  command.at(i - 1) != '|' && command.at(i - 1) != '&'))
@@ -151,9 +147,14 @@ int main()
 	string command;
 	getline(cin,command);	
 	vector <int> connector;
+
+	if(command.find('#') != string::npos)
+	{
+		command.erase(command.find('#'),(command.size() - command.find('#')));//delete everything after # since anything after # is comment
+	}
+	
 	con_vec(command, connector);
 	int counter = 0;//to see if there is any -1 in the connector vector, if there is, give out a error message.
-	
 	for (int i = 0; i < connector.size(); i++) // test to see if the con_vec funtion is working
 	{
 		if(connector.at(i) == -1)
@@ -166,11 +167,34 @@ int main()
 	
 	if(counter == -1)//check if there is any -1, if there is, terminate
 	{
-		cout << "your command has some type." << endl;
+		cout << "your command has some error." << endl;
+		return 0;
 	}
-//////////////////////////////////stringtokenize the command/////////////////	
+//////////////////////////////////stringtokenize the command////////////////////////////////////////////////////	
+	char* temp;
+/*	for (int i = 0; i < command.size(); i++)
+	{
+		temp[i] = command.at(i);
+	}*/
+	
+	temp = new char[command.size()];
+	strcpy(temp, command.c_str());
+	
+	vector <char*> command_v;
+	char* pieces;
+	pieces = strtok(temp, " |&;");
+	while (pieces != NULL)
+	{
+		command_v.push_back(pieces);
+		pieces = strtok(NULL, " |&;");
+	}
+	
+	for (int i = 0; i < command_v.size(); i++)
+	{
+		cout << command_v.at(i) << endl;
+	}
 
-return 0
+	return 0;
 	
 }	
 	
