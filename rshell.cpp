@@ -115,6 +115,27 @@ void con_vec (string command, vector <int> &empty_v)
 		}
 	}	
 	return ;
+}
+
+int run ( const char* file, char* const args[])
+{
+	pid_t pid = fork();
+	if(pid == 0)
+	{
+		if(execvp(file, args) == -1)
+		{
+			perror("exec");
+			return -1;
+		}
+	}
+	if (pid > 0)
+	{
+		if (wait(0) == -1)
+		{
+			perror("wait");
+		}
+	}
+	return 1;
 } 
 		
 int main()
@@ -136,6 +157,10 @@ int main()
 	string command;
 	getline(cin,command);	
 	vector <int> connector_v;
+	if(command.empty())
+	{
+		return 0;
+	}
 
 	if(command.find('#') != string::npos)
 	{
@@ -183,14 +208,82 @@ int main()
 		cout << command_v.at(i) << endl;
 	}
 
-	int status;
+	int status = 0;
+	bool firstcommand = true;
 	// j is to keep track of the command_v
 	vector<char*> temp_v;
-	bool first_command = true;
-	int i = 0;
+	int j = 0;
+	temp_v.push_back(command_v.at(j));//push back the first command anyways
+	j++;//now J is 1
+	for(int i = 0; (i != connector_v.size() && j != command_v.size()); i++)
+	{
+		if(connector_v.at(i) == 0)
+		{
+			temp_v.push_back(command_v.at(j));//if it is space, add the next command as the parameter
+			j++;
+		}
+		else if (connector_v.at(i) == 1)
+		{
+			char** temp_com;
+			if(firstcommand)
+			{
+				temp_com = &temp_v[0];//if it is the first command
+				status = run(temp_com[0], temp_com);//run the command that is in the temp_v already, and check the status
+				firstcommand = false;
+			}
+			if(status == -1)
+			{
+				temp_v.clear();
+				temp_v.push_back.(command_v.at(j));
+				j++;
+				temp_com = &temp_v[0];
+				status = run(temp_com[0], temp_com);//if status is -1, run the next command, and set the status
+			}
+			else if (status != -1)
+			{
+				j++;
+			}	
+		}
+		else if (connector_v.at(i) == 2);
+		{
+			char** temp_com;
+			if(firstcommand)
+			{
+				temp_com = &temp_v[0];//if it is the first command 
+				status = run(temp_com[0],temp_com);//run the commmand that is in the temp_v already, no need to check status
+				firstcommand = false;
+			}
+			temp_v.clear();//clear the temp_v;
+			temp_v.push_back(command_v.at(j));
+			j++;
+			temp_com = &temp_v[0];
+			status = run(temp_com[0], temp_com);//run the next command, and set the status
+		}
+		else if (connector_v.at(i) == 3)
+		{
+			char** temp_com;
+			if(firstcommand)
+			{
+				temp_com = &temp_v[0];
+				status = run (temp_com[0], temp_com);	
+				firstcommand = false;
+			}
+			if(status != -1)
+			{
+				temp_v.clear();
+				temp_v.push_back(command_v.at(j));
+				j++;
+				temp_com = &temp_v[0];
+				status = run(temp_com[0], temp_com); // run the next command, and set the status
+			}
+			if(status == -1)
+			{
+				j++;
+			}
+		}
 		
-
-	
+		
+	}
 	return 0;
 }	
 	
