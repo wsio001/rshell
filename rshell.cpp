@@ -10,86 +10,128 @@
 #include <vector>
 using namespace std;
 
-
-void (string command, vector <int> &empty_v)
+void con_vec (string command, vector <int> &empty_v)
 {
 //index:
-//0 means ||
-//1 means &&
+//1 means ||
+//3 means &&
 //2 means ;
-//3 means #
-//4 means SPACE
-//-1 means error
+//4 means #
+//0 means SPACE
+//-1 means fail
+
+	int counter = 0;
+	
+	if (command.at(0) == ';' || command.at(0) == '|' || command.at(0) == '&')
+	{
+		empty_v.push_back(-1);
+		return;
+	}
 	for (int i = 0; i < command.size(); ++i)
 	{
 		if (i == command.size() - 1)
 		{	
-			if (command.at(i) == ';' ||  command.at(i) == '|' || command.at(i) == '&' || command.at(i) == ' ')
+			if (command.at(i) == ';' ||  command.at(i) == '|' || command.at(i) == '&')
 			{
 				empty_v.push_back(-1); // -1 means error;
-				return//since it is at the end, we do not want to keep checking, so return
+				return;//since it is at the end, we do not want to keep checking, so return
 			}
 		}
 
 			
-		if (command.at(i) == '|' )
+		if (command.at(i) == '|')
 		{
-			if( command.at(i + 1) =! '|')
+			if(counter == 1)//counter init is 0, so it will go to the else case, counter means which '|' we are in, 0 means first one, 1 means second one.
 			{
-				empty_v.push_back(-1);
-			}
-			else if (command.at(i + 1) == '|')
+				if(command.at(i + 1) == '#' || command.at(i + 1) == ';' ||  command.at(i + 1) == '&')
+				{
+					empty_v.push_back(-1);
+					return;
+				}	
+				else
+				{
+					empty_v.push_back(1); //1means '|'
+					counter--;
+				}
+			}		
+
+			else
 			{
-				empty_v.push_back(0);// 0 means ||
-				i++;// since we know it is two |s next to each other, we can just skip the next character	
+				if (command.at(i + 1) != '|')
+				{
+					empty_v.push_back(-1);
+					return;
+				}
+				counter++;
 			}
 		}
 		
 		else if (command.at(i) == '&')
 		{	
-			if (command.at(i + 1) =! '&')
+			if(counter == 1)//counter init is 0, so it will go to the else case, counter means which '&' we are in, 0 means first one, 1 means second one.
 			{
-				empty_v.push_back(-1);
-			}
-			else if ( command.at(i + 1) == '&')
+				if(command.at(i + 1) == '#' || command.at(i + 1) == ';' ||  command.at(i + 1) == '|')
+				{
+					empty_v.push_back(-1);
+					return;
+				}	
+				else
+				{
+					empty_v.push_back(3); //3means '&'
+					counter--;
+				}
+			}		
+
+			else
 			{
-				empty_v.push_back(1);// 1 means &&
-				i++; //since it is two &s next to each other, I can just skip the next one.
+				if (command.at(i + 1) != '&')
+				{
+					empty_v.push_back(-1);
+					return;
+				}
+				counter++;
 			}	
+			
 		}
-		
 		else if (command.at(i) == ';')
 		{
 			empty_v.push_back(2); //2 means semi colon
 			if (command.at(i + 1) == ';')
 			{
 				empty_v.push_back(-1);
-				i++;//since we check the next one, we can just skip the next one);
+				return;
 			}
 		}
 		
 		else if (command.at(i) == '#')
 		{
-			empty_v.push_back(3);
-			return //we know that # means comment, so we do not read anytning after #, so return
+			empty_v.push_back(4);
+			return; //we know that # means comment, so we do not read anytning after #, so return
 		}
 		
 		else if (command.at(i) == ' ')
 		{
-			if(command.at(i + 1) == '#' || command.at(i + 1) == ';' ||  command.at(i + 1) == '|' || command.at(i + 1) == '&' || command.at(i + 1) == ' ')
+			if((command.at(i + 1) != '#' && command.at(i + 1) != ';' &&  command.at(i + 1) != '|' && command.at(i + 1) != '&')&&(command.at(i - 1) != '#' && command.at(i - 1) != ';' &&  command.at(i - 1) != '|' && command.at(i - 1) != '&'))
+
 			{
-				empty_v.push_back(-1);
-				i++;
-			}
-			else
-			{
-				empty_v.push_back(4); //4 means SPACE;
+				empty_v.push_back(0); //0 means SPACE;
 			}
 		}
 	}	
-	return;
+	return ;
+}
+/*
+int run(const char* file, char *const argv[])
+{
+	int status = 0;
+	if (execvp (file, argv[]) == -1)
+	{
+		status = -1;
+		perror("exec");
+	}
+	return status;
 } 
-		
+*/		
 int main()
 {
 
@@ -110,13 +152,25 @@ int main()
 	getline(cin,command);	
 	vector <int> connector;
 	con_vec(command, connector);
+	int counter = 0;//to see if there is any -1 in the connector vector, if there is, give out a error message.
 	
 	for (int i = 0; i < connector.size(); i++) // test to see if the con_vec funtion is working
 	{
+		if(connector.at(i) == -1)
+		{
+			counter = -1;
+		}
 		cout << connector.at(i) << " ";
 	}
 	cout << endl;
 	
-	return 0;
+	if(counter == -1)//check if there is any -1, if there is, terminate
+	{
+		cout << "your command has some type." << endl;
+	}
+//////////////////////////////////stringtokenize the command/////////////////	
+
+return 0
+	
 }	
 	
