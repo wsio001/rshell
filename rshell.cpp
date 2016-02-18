@@ -115,19 +115,8 @@ void con_vec (string command, vector <int> &empty_v)
 		}
 	}	
 	return ;
-}
-/*
-int run(const char* file, char *const argv[])
-{
-	int status = 0;
-	if (execvp (file, argv[]) == -1)
-	{
-		status = -1;
-		perror("exec");
-	}
-	return status;
 } 
-*/		
+		
 int main()
 {
 
@@ -146,22 +135,22 @@ int main()
 ////////////////////////////////////// making the connector array///////////////////////////////////////
 	string command;
 	getline(cin,command);	
-	vector <int> connector;
+	vector <int> connector_v;
 
 	if(command.find('#') != string::npos)
 	{
 		command.erase(command.find('#'),(command.size() - command.find('#')));//delete everything after # since anything after # is comment
 	}
 	
-	con_vec(command, connector);
+	con_vec(command, connector_v);
 	int counter = 0;//to see if there is any -1 in the connector vector, if there is, give out a error message.
-	for (int i = 0; i < connector.size(); i++) // test to see if the con_vec funtion is working
+	for (int i = 0; i < connector_v.size(); i++) // test to see if the con_vec funtion is working
 	{
-		if(connector.at(i) == -1)
+		if(connector_v.at(i) == -1)
 		{
 			counter = -1;
 		}
-		cout << connector.at(i) << " ";
+		cout << connector_v.at(i) << " ";
 	}
 	cout << endl;
 	
@@ -189,12 +178,209 @@ int main()
 		pieces = strtok(NULL, " |&;");
 	}
 	
-	for (int i = 0; i < command_v.size(); i++)
+	for (int i = 0; i < command_v.size(); i++)// cout command_v
 	{
 		cout << command_v.at(i) << endl;
 	}
 
+	int status;
+	int j = 0;//to keep track of the command_v
+	vector<char*> temp_v;
+	bool first_command = true;
+	for(int i = 0; j < command_v.size()||i<connector_v.size(); ++i)
+	{
+		if(first_command == true)
+		{	
+			if (connector_v.at(i) == 0)
+			{
+				temp_v.push_back(command_v.at(j));
+				j++;
+				temp_v.push_back(command_v.at(j));
+				j++;
+				temp_v.push_back(NULL);
+				char** c_temp = &temp_v[0];
+				pid_t pid = fork();
+				if (pid == 0)
+				{
+					//child;
+		
+					if (execvp(c_temp[0], c_temp) == -1)
+					{
+						status = -1;
+						perror("exec");
+					}
+				}
+				if (pid > 0)
+				{
+					//paretn;
+					if(wait(0) == -1)
+					{			
+						perror("wait");
+					}		
+				}		
+				temp_v.clear();
+			}
+			else
+			{
+				temp_v.push_back(command_v.at(j));
+				j++;
+				temp_v.push_back(NULL);
+				char** a_temp = &temp_v[0];
+				pid_t pid = fork();
+				if (pid == 0)
+				{
+					//child;
+		
+					if (execvp(a_temp[0], a_temp) == -1)
+					{
+					status = -1;
+					perror("exec");
+					}
+				}
+				if (pid > 0)
+				{
+					//paretn;
+					if(wait(0) == -1)
+					{			
+						perror("wait");
+					}		
+				}
+				temp_v.clear();
+				i--;
+			}
+			first_command = false;
+		}
+		else if (!first_command)	
+		{
+			if (connector_v.at(i) == 1)
+			{
+				if(status == -1)
+				{
+					if (connector_v.at(i + 1) == 0)
+					{
+						temp_v.push_back(command_v.at(j));
+						j++;
+						temp_v.push_back(command_v.at(j));
+						j++;
+						temp_v.push_back(NULL);
+						char** c_temp = &temp_v[0];
+						pid_t pid = fork();
+						if (pid == 0)
+						{
+							//child;
+				
+							if (execvp(c_temp[0], c_temp) == -1)
+							{
+								status = -1;
+								perror("exec");
+							}
+						}
+						if (pid > 0)
+						{
+							//paretn;
+							if(wait(0) == -1)
+							{			
+								perror("wait");
+							}		
+						}		
+						temp_v.clear();
+					}
+					else
+					{
+						temp_v.push_back(command_v.at(j));
+						j++;
+						temp_v.push_back(NULL);
+						char** a_temp = &temp_v[0];
+						pid_t pid = fork();
+						if (pid == 0)
+						{
+							//child;
+							if (execvp(a_temp[0], a_temp) == -1)
+							{
+								status = -1;
+								perror("exec");
+							}
+						}
+						if (pid > 0)
+						{
+							//paretn;
+							if(wait(0) == -1)
+							{			
+								perror("wait");
+							}		
+						}
+						temp_v.clear();	
+					}
+				}
+				else
+				{
+					j++;
+					j++;
+				}
+			}
+		/*	else if (connector_v.at(i) == 3)
+			{
+				if(status != -1)
+				{
+					temp_v.push_back(command_v.at(j));
+					j++;
+					temp_v.push_back(NULL);
+					char** a_temp = &temp_v[0];
+					pid_t pid = fork();
+					if (pid == 0)
+					{
+						//child;
+						if (execvp(a_temp[0], a_temp) == -1)
+						{
+							status = -1;
+							perror("exec");
+						}
+					}
+					if (pid > 0)
+					{
+						//paretn;
+						if(wait(0) == -1)
+						{			
+							perror("wait");
+						}		
+					}
+				temp_v.clear();	
+				}
+				else
+				{
+					j++;
+				}
+			}
+			else if (connector_v.at(i) == 2)
+			{
+				{
+					temp_v.push_back(command_v.at(j));
+					j++;
+					temp_v.push_back(NULL);
+					char** a_temp = &temp_v[0];
+					pid_t pid = fork();
+					if (pid == 0)
+					{
+						//child;
+						if (execvp(a_temp[0], a_temp) == -1)
+						{
+							status = -1;
+							perror("exec");
+						}
+					}
+					if (pid > 0)
+					{
+						//paretn;
+						if(wait(0) == -1)
+						{			
+							perror("wait");
+						}		
+					}
+					temp_v.clear();	
+				}
+			}
+		*/}
+	}		
 	return 0;
-	
 }	
 	
