@@ -21,4 +21,4 @@ Exit does not work as part of the command, I have to hardcode the command exit. 
 * while "$ exit || ls" does not work
 
 It might not work properly when the command get too long.
-It might create a Seg Fault at the end of a long command.
+For some reason, the strtok will add some weird character in some of the tokenized string, but most of them is fine.
