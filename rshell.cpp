@@ -12,12 +12,12 @@ using namespace std;
 
 void con_vec (string command, vector <int> &empty_v)
 {
-//index:
-//1 means ||
-//3 means &&
-//2 means ;
-//0 means SPACE
-//-1 means fail
+	//index:
+	//1 means ||
+	//3 means &&
+	//2 means ;
+	//0 means SPACE
+	//-1 means fail
 
 	int counter = 0;
 	
@@ -137,11 +137,9 @@ int run ( const char* file, char* const args[])
 	}
 	return 1;
 } 
-		
-int main()
-{
 
-/////////////////////////////////////// get usernmae and hostname /////////////////////////////////////////	
+void getname()// this function is to get loginname and host name;
+{
 	char* name;                    	
 	struct passwd* pass;
 	pass = getpwuid(getuid());
@@ -152,40 +150,13 @@ int main()
 	host[1023] = '\0';
 	gethostname(host,1023);
 	printf("%s$ ", host);
-
-////////////////////////////////////// making the connector array///////////////////////////////////////
-	string command;
-	getline(cin,command);	
-	vector <int> connector_v;
-	if(command.empty())
-	{
-		return 0;
-	}
-
-	if(command.find('#') != string::npos)
-	{
-		command.erase(command.find('#'),(command.size() - command.find('#')));//delete everything after # since anything after # is comment
-	}
-		
-	int counter = 0;//to see if there is any -1 in the connector vector, if there is, give out a error message.
-	for (int i = 0; i < connector_v.size(); i++) // test to see if the con_vec funtion is working
-	{
-		if(connector_v.at(i) == -1)
-		{
-			counter = -1;
-		}
-		cout << connector_v.at(i) << " ";
-	}
-	cout << endl;
+	return;
+}
 	
-	if(counter == -1)//check if there is any -1, if there is, terminate
-	{
-		cout << "your command has some error." << endl;
-		return 0;
-	}
-//////////////////////////////////stringtokenize the command////////////////////////////////////////////////////	
+void tokenizer(string command, vector<char*> &command_v)//this function push command_v with all the commands and parameter next to each other
+{	
 	char* temp;
-/*	for (int i = 0; i < command.size(); i++)
+	/*for (int i = 0; i < command.size(); i++)
 	{
 		temp[i] = command.at(i);
 	}*/
@@ -193,7 +164,6 @@ int main()
 	temp = new char[command.size()];
 	strcpy(temp, command.c_str());
 	
-	vector <char*> command_v;
 	char* pieces;
 	pieces = strtok(temp, " |&;");
 	while (pieces != NULL)
@@ -201,109 +171,158 @@ int main()
 		command_v.push_back(pieces);
 		pieces = strtok(NULL, " |&;");
 	}
-	
-	for (int i = 0; i < command_v.size(); i++)// cout command_v
-	{
-		cout << command_v.at(i) << endl;
-	}
-	
-	if (connector_v.empty())// if it is single command, then just push back and run it and return.
-	{
-		vector <char*> noconnect_v;
-		noconnect_v.push_back(command_v.at(0));
-		noconnect_v.push_back(NULL);
-		char** noconnect;
-		noconnect = &noconnect_v[0];
-		run(noconnect[0], noconnect);
-		return 0;
-	}
+	return;
 		
+}
+int main()
+{
+	string command;
 
-	int status = 0;
-	bool firstcommand = true;
-	// j is to keep track of the command_v
-	vector<char*> temp_v;
-	int j = 0;
-	temp_v.push_back(command_v.at(j));//push back the first command anyways
-	j++;//now J is 1
-	char** temp_com;
-	for(int i = 0; (i < connector_v.size() && j < command_v.size()); i++)
+	do //check if the command is exit, empty command, error command, single command, multiply command, or exit.
 	{
-		
-		if(connector_v.at(i) == 0)
+		getname();
+		getline(cin, command);
+		if (command != "exit") //check to see if command is exit, if it is not , continue.
 		{
-			temp_v.push_back(command_v.at(j));//if it is space, add the next command as the parameter
-			j++;
-		}
-		else if (connector_v.at(i) == 1)
-		{
-			if(firstcommand)
-			{
-				temp_v.push_back(NULL);
-				temp_com = &temp_v[0];//if it is the first command
-				cout << temp_v.at(i) << endl << "////////////" << endl;
-				status = run(temp_com[0], temp_com);//run the command that is in the temp_v already, and check the status
-				firstcommand = false;
-			}
-			if(status == -1)
-			{
-				temp_v.clear();
-				temp_v.push_back(command_v.at(j));
-				temp_v.push_back(NULL);
-				j++;
-				temp_com = &temp_v[0];
-				status = run(temp_com[0], temp_com);//if status is -1, run the next command, and set the status
-			}
-			else if (status != -1)
-			{
-				j++;
-			}	
-		}
-		else if (connector_v.at(i) == 2)
-		{
-			if(firstcommand)
-			{
-				temp_v.push_back(NULL);
-				temp_com = &temp_v[0];//if it is the first command 
-				status = run(temp_com[0],temp_com);//run the commmand that is in the temp_v already, no need to check status
-				firstcommand = false;
-			}
-			temp_v.clear();//clear the temp_v;
-			temp_v.push_back(command_v.at(j));
-			temp_v.push_back(NULL);
-			j++;
-			temp_com = &temp_v[0];
-			status = run(temp_com[0], temp_com);//run the next command, and set the status
-		}
+			if (!command.empty()) //check to see if it is a empty command, if it is not, continue.
+			{	
+				vector <int> connector_v; //vector to store connectors representation number
+				int counter = 0; //to see if there is any -1 in the connector vector, if there is, give out a error message.
+				vector <char*> command_v; //vector to store the commands next to each other individually
+				
+				con_vec(command, connector_v);
 
-		else if (connector_v.at(i) == 3)
-		{
-			if(firstcommand)
-			{
-				temp_v.push_back(NULL);
-				temp_com = &temp_v[0];
-				status = run (temp_com[0], temp_com);	
-				firstcommand = false;
+				for (int i = 0; i < connector_v.size(); i++) 
+				{
+					if (connector_v.at(i) == -1)
+					{
+						counter = -1;
+					}
+					//cout << connector_v.at(i) << " ";
+				}
+
+				if (counter != -1) //see if it is error command, if not, continue. now the command must be either single or multiply
+				{
+					if (command.find('#') != string::npos) //trim everything after #, including #
+					{
+						command.erase(command.find('#'), (command.size() - command.find('#')));
+					}
+
+					if(connector_v.empty()) //check to see if it is a single command, if yes, run it and return back
+					{
+						tokenizer(command,command_v);
+						vector <char*> noconnect_v;
+						noconnect_v.push_back(command_v.at(0));
+						noconnect_v.push_back(NULL);
+						char** noconnect;
+						noconnect = &noconnect_v[0];
+						run(noconnect[0], noconnect);
+					}
+					else //now this is multiply command
+					{
+						tokenizer(command,command_v);
+						int status = 0;
+						bool firstcommand = true;
+						vector<char*> temp_v;
+						int j = 0; // it is to keep track of command_v
+						temp_v.push_back(command_v.at(j)); //push back the first command anyways
+						j++; //now J is 1
+						char** temp_com;
+						for (int i = 0; (i < connector_v.size() && j < command_v.size()); i++)
+						{
+							
+							if (connector_v.at(i) == 0)
+							{
+								temp_v.push_back(command_v.at(j)); //if it is space, add the next command as the parameter
+								j++;
+							}
+							else if (connector_v.at(i) == 1)
+							{
+								if(firstcommand)
+								{
+									temp_v.push_back(NULL);
+									temp_com = &temp_v[0]; //if it is the first command
+									status = run(temp_com[0], temp_com); //run the command that is in the temp_v already, and check the status
+									firstcommand = false;
+								}
+								if (status == -1)
+								{
+									temp_v.clear();
+									temp_v.push_back(command_v.at(j));
+									temp_v.push_back(NULL);
+									j++;
+									temp_com = &temp_v[0];
+									status = run(temp_com[0], temp_com); //if status is -1, run the next command, and set the status
+								}
+								else if (status != -1)
+								{
+									j++;
+								}	
+							}
+							else if (connector_v.at(i) == 2)
+							{
+								if (firstcommand)
+								{
+									temp_v.push_back(NULL);
+									temp_com = &temp_v[0]; //if it is the first command 
+									status = run(temp_com[0],temp_com); //run the commmand that is in the temp_v already, no need to check status
+									firstcommand = false;
+								}
+								temp_v.clear(); //clear the temp_v;
+								temp_v.push_back(command_v.at(j));
+								temp_v.push_back(NULL);
+								j++;
+								temp_com = &temp_v[0];
+								status = run(temp_com[0], temp_com); //run the next command, and set the status
+							}
+
+							else if (connector_v.at(i) == 3)
+							{
+								if (firstcommand)
+								{
+									temp_v.push_back(NULL);
+									temp_com = &temp_v[0];
+									status = run (temp_com[0], temp_com);	
+									firstcommand = false;
+								}
+								if (status != -1)
+								{
+									temp_v.clear();
+									temp_v.push_back(command_v.at(j));
+									temp_v.push_back(NULL);
+									j++;
+									temp_com = &temp_v[0];
+									status = run(temp_com[0], temp_com); // run the next command, and set the status
+								}
+								else if (status == -1)
+								{
+									j++;
+								}
+							}
+						}
+						temp_v.push_back(NULL);//if thiere isnt any other connecter beside space, just run all of them.
+						temp_com = &temp_v[0];
+						status = run(temp_com[0], temp_com);
+					}
+				}
+				else
+				{
+					cout << "Cannot run the command becasue it has error in it, re-enter your command" << endl;
+				}
 			}
-			if(status != -1)
+			else
 			{
-				temp_v.clear();
-				temp_v.push_back(command_v.at(j));
-				temp_v.push_back(NULL);
-				j++;
-				temp_com = &temp_v[0];
-				status = run(temp_com[0], temp_com); // run the next command, and set the status
-			}
-			else if(status == -1)
-			{
-				j++;
+				cout << "Error, empty command, re_enter your command" << endl;
 			}
 		}
-		return 0;
-	}
-	temp_v.push_back(NULL);
-	temp_com = &temp_v[0];
-	status = run(temp_com[0], temp_com);
+		else
+		{
+			cout << "Bye" << endl;
+			break;
+		}
+				
+	} while(command != "exit");		
+	
 	return 0;
 }	
 	
