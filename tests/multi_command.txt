@@ -1,0 +1,9 @@
+ls || ls
+echo hello && echo test1
+echo helle || echo super should not show  && echo showtest2
+ls && ls
+echo hello ; echo test3
+ls -a; echo hello && mkdir test || echo test4shouldnotshow; git status
+rm -r test && git branch -a
+echo done
+exit
