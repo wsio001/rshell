@@ -168,8 +168,6 @@ int main()
 		{
 			cout << "Bye" << endl;
 			return 0;
-			exit(0);
-			break;
 			
 		}	
 
@@ -212,8 +210,8 @@ int main()
 						if(execvp(noconnect[0], noconnect) == -1)
 						{
 							perror("exec");
-							exit(0);
 						}
+						exit(0);
 					}
 					if (pid > 0)
 					{
@@ -253,6 +251,7 @@ int main()
 										status = -1;
 										perror("exec");
 									}
+									exit(0);
 								}
 								if (pid > 0)
 								{
@@ -286,9 +285,10 @@ int main()
 									{
 										if(execvp(temp_com[0], temp_com) == -1)
 										{
-										status = -1;
-										perror("exec");
+											status = -1;
+											perror("exec");
 										}
+										exit(0);
 									}
 									if (pid > 0)
 									{
@@ -335,9 +335,10 @@ int main()
 								{
 									if(execvp(temp_com[0], temp_com) == -1)
 									{
-									status = -1;
-									perror("exec");
+										status = -1;
+										perror("exec");
 									}
+									exit(0);
 								}
 								if (pid > 0)
 								{
@@ -371,9 +372,11 @@ int main()
 								{
 									if(execvp(temp_com[0], temp_com) == -1)
 									{
-									status = -1;
-									perror("exec");
+										status = -1;
+										perror("exec");
 									}
+
+									exit(0);
 								}
 								if (pid > 0)
 								{
@@ -400,6 +403,8 @@ int main()
 										status = -1;
 										perror("exec");
 									}
+
+									exit(0);
 								}
 								if (pid > 0)
 								{
@@ -438,6 +443,7 @@ int main()
 											status = -1;
 											perror("exec");
 										}
+										exit(0);
 									}
 									if (pid > 0)
 									{
@@ -485,6 +491,7 @@ int main()
 							{
 								perror("exec");
 							}
+							exit(0);
 						}
 						if (pid > 0)
 						{	
