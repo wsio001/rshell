@@ -1,0 +1,3 @@
+echo I have been testing "exit" command in other sh file. And they work 
+echo So "exit" work
+exit
