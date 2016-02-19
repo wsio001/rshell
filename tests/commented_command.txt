@@ -1,0 +1,6 @@
+echo hello # echo you
+ls -a # -r
+ls # && git status
+ls # echo notshow
+echo done # ls # ls # echo done222
+exit
