@@ -1,0 +1,10 @@
+ls
+echo Hello
+echo How are you 
+ls -a
+ls -r
+mkdir tstpieces
+rm -r tstpieces
+git branch 
+echo done
+exit
