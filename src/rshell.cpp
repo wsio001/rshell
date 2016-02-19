@@ -19,7 +19,7 @@ void con_vec (string command, vector <int> &empty_v)
 	//0 means SPACE
 	//-1 means fail
 
-	int counter = 0;
+	unsigned counter = 0;
 	
 	if (command.at(0) == ';' || command.at(0) == '|' || command.at(0) == '&')
 	{
@@ -168,7 +168,9 @@ int main()
 		{
 			cout << "Bye" << endl;
 			return 0;
-			cout << "hello" << endl;
+			exit(0);
+			break;
+			
 		}	
 
 		else if (!command.empty()) //check to see if it is a empty command, if it is not, continue.
@@ -179,7 +181,7 @@ int main()
 			
 			con_vec(command, connector_v);
 
-			for (int i = 0; i < connector_v.size(); i++) 
+			for (unsigned i = 0; i < connector_v.size(); i++) 
 			{
 				if (connector_v.at(i) == -1)
 				{
@@ -210,6 +212,7 @@ int main()
 						if(execvp(noconnect[0], noconnect) == -1)
 						{
 							perror("exec");
+							exit(0);
 						}
 					}
 					if (pid > 0)
@@ -224,13 +227,12 @@ int main()
 				{
 					int status = 0;
 					bool firstcommand = true;
-					bool parameter = false;
 					vector<char*> temp_v;
-					int j = 0; // it is to keep track of command_v
+					unsigned j = 0; // it is to keep track of command_v
 					temp_v.push_back(command_v.at(j)); //push back the first command anyways
 					j++;
 					char** temp_com;
-					for (int i = 0; ((i < connector_v.size()) && (j < command_v.size())); i++)
+					for (unsigned i = 0; ((i < connector_v.size()) && (j < command_v.size())); i++)
 					{		
 						if (connector_v.at(i) == 0)
 						{
@@ -304,8 +306,8 @@ int main()
 								{
 									if (connector_v.at(i + 1) == 0)
 									{
-										int f = i + 1;
-										int count = 0;
+										unsigned f = i + 1;
+										unsigned count = 0;
 										while (connector_v.at(f) == 0)
 										{	
 											++f;
@@ -453,8 +455,8 @@ int main()
 								{
 									if (connector_v.at(i + 1) == 0)
 									{
-										int f = i + 1;
-										int count = 0;
+										unsigned f = i + 1;
+										unsigned count = 0;
 										while (connector_v.at(f) == 0)
 										{	
 											++f;
