@@ -1,10 +1,10 @@
 #Rshell bash
-Rshell is a simple bash terminal emulator just like Unix bash terminal.
+Rshell is a simple bash terminal emulator just like Unix bash terminal. For hw2, I added the test function, a specific hardcode "test", which means it is not base on execvp.
 
 ##Installation
 * $ git clone https://github.com/wsio001/rshell.git
 * $ cd rshell
-* $ git checkout hw1
+* $ git checkout hw2
 * $ make
 * $ bin/rshell
 
