@@ -1,0 +1,7 @@
+test rshell.cpp
+test -f rshell.cpp
+test -d rshell.cpp
+ls && test rhsell.cpp
+echo A && echo B || echo C && test rshell.cpp
+(echo A && echo B) || (echo C && echo D)
+(echo A && echo B && test rshell.cpp) || (echo this should not show)
