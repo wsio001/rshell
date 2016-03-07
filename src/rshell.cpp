@@ -1,520 +1,541 @@
-#include <unistd.h>
-#include <stdlib.h>
 #include <iostream>
-#include <ios>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <stdio.h>
-#include <pwd.h>
+#include <string>
 #include <string.h>
-#include <vector>
+#include <typeinfo>
+#include <boost/tokenizer.hpp>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cmath>
+#include <stack>
+#include <sys/stat.h>
+#include <pwd.h>
+
 using namespace std;
+using namespace boost;
 
-void con_vec (string command, vector <int> &empty_v)
+
+void no_end(string &line, bool &e, int &count) // take care of the paranthesis
 {
-	//index:
-	//1 means ||
-	//3 means &&
-	//2 means ;
-	//0 means SPACE
-	//-1 means fail
+    for(unsigned i = 0; i < line.size(); ++i)
+    {
+        if(line.at(i) == ')')
+        {
+            --count;
+        }
+        if(line.at(i) == '(')
+        {
+            ++count;
+        }
+        if((line.at(i) == ')') && (count == 0))
+        {
+            line.erase(line.begin()+i);                 
+            e = true;
+        }
+    }
+}
 
-	unsigned counter = 0;
-	
-	if (command.at(0) == ';' || command.at(0) == '|' || command.at(0) == '&')
-	{
-		empty_v.push_back(-1);
-		return;
-	}
-	for (unsigned i = 0; i < command.size(); ++i)
-	{
-		if (i == command.size() - 1)
-		{	if (command.at(i) == ' ')
-			{
-				return;
-			}
-			if (command.at(i) == ';' ||  command.at(i) == '|' || command.at(i) == '&')
-			{
-				empty_v.push_back(-1); // -1 means error;
-				return;//since it is at the end, we do not want to keep checking, so return
-			}
-		}
+void Build(vector<string> &cmd_parent, int &size, int &s) // make the parenthesis command
+{
+    string temp = cmd_parent.at(0);             
+    temp.erase(temp.begin());
+    cmd_parent.at(0) = temp;  
+    
+    vector<string> new_p;
+    bool end = false;
+    int count = 1;
+    for(int i = 0; i < size; ++i)
+    {
+        if(end == false)
+        {
+            string fend = cmd_parent.at(i);
+            no_end(fend, end, count);
+            new_p.push_back(fend);
+            s = i + 1;
+        }
+        else
+        {
+            string find_finish = cmd_parent.at(i);
+            new_p.push_back(find_finish);
+        }
+    }
+    cmd_parent = new_p;
+    return;
+}
+    
+int checkFlag(vector<string> &cmd)
+{                     
+    int counter = 0;
+    if(cmd.at(0) == "-e"){
+        counter = 1;
+        cmd.erase(cmd.begin());
+    }
+    else if(cmd.at(0) == "-f")
+    {
+        counter = 2;
+        cmd.erase(cmd.begin());
+    }
+    else if(cmd.at(0) == "-d")
+    {
+        counter = 3;
+        cmd.erase(cmd.begin());
+    }
+    return counter;
+}
 
-			
-		if (command.at(i) == '|')
-		{
-			if(counter == 1)//counter init is 0, so it will go to the else case, counter means which '|' we are in, 0 means first one, 1 means second one.
-			{
-				if(command.at(i + 1) == '#' || command.at(i + 1) == ';' ||  command.at(i + 1) == '&')
-				{
-					empty_v.push_back(-1);
-					return;
-				}	
-				else
-				{
-					empty_v.push_back(1); //1means '|'
-					counter--;
-				}
-			}		
+int test(vector<string> ParsedString, unsigned index, bool c, int con, int p_count, bool parent_point, int parent_counter_p, bool in_par){
+if(in_par == true){                                         //checks paranthesis
+    
+    if((parent_point == false) && (con != 2) && (parent_counter_p != 2))  //Case
+    {
+        return 1;   
+    }
+    if((parent_point == true) && (parent_counter_p == 2)){                //Case
+        return 1;
+    }
+}
+   if((c == false) && (p_count != 2)){                        //Case
+        return 1;             
+    }
+    if((c == true) && (p_count == 2)){                        //Case
+      return 0;
+    }
+    int flag = checkFlag(ParsedString);                     //get flag
+    unsigned end = ParsedString.size();
+    if(index > 0){
+       end = index;
+    }
+    // check what's in vector
+    for(unsigned i = 0; i < end; ++i){
+        //cout << ParsedString.at(i) << ' ';
+    }
 
-			else
-			{
-				if (command.at(i + 1) != '|')
-				{
-					empty_v.push_back(-1);
-					return;
-				}
-				counter++;
-			}
-		}
-		
-		else if (command.at(i) == '&')
-		{	
-			if(counter == 1)//counter init is 0, so it will go to the else case, counter means which '&' we are in, 0 means first one, 1 means second one.
-			{
-				if(command.at(i + 1) == '#' || command.at(i + 1) == ';' ||  command.at(i + 1) == '|')
-				{
-					empty_v.push_back(-1);
-					return;
-				}	
-				else
-				{
-					empty_v.push_back(3); //3means '&'
-					counter--;
-				}
-			}		
+    char *path;
+    path = strdup((ParsedString.at(0)).c_str());
+    struct stat s;
+    if(flag == 0 || flag == 1){
+        if(stat(path, &s) == 0){                      
+            cout << "(TRUE)" << endl;
+            return 0;
+        }
+        else{
+            cout << "(FALSE)" << endl;
+            return 1;
+        }
+    }
+    else if(flag == 2){
+        if((stat(path, &s) == 0) && (s.st_mode & S_IFREG)){     //file               
+            cout << "(TRUE)" << endl;
+            return 0;
+        }
+        else{
+            cout << "(FALSE)" << endl;
+            return 1;
+        }
+    }
+    else if(flag == 3){
+        if((stat(path, &s) == 0) && (s.st_mode & S_IFDIR)){    //directory
+            cout << "(TRUE)" << endl;
+            return 0;
+        }
+        else{
+            cout << "(FALSE)" << endl;
+            return 1;
+        } 
+    }
+    else{
+        cout << "Error" << endl;
+        exit(-1);
+    }
+}
 
-			else
-			{
-				if (command.at(i + 1) != '&')
-				{
-					empty_v.push_back(-1);
-					return;
-				}
-				counter++;
-			}	
-			
-		}
-		else if (command.at(i) == ';')
-		{
-			empty_v.push_back(2); //2 means semi colon
-			if (command.at(i + 1) == ';')
-			{
-				empty_v.push_back(-1);
-				return;
-			}
-		}
-		
-		else if (command.at(i) == ' ')
-		{
-			if((command.at(i + 1) != '#' && command.at(i + 1) != ';' &&  command.at(i + 1) != '|' && command.at(i + 1) != '&')&&(command.at(i - 1) != '#' && command.at(i - 1) != ';' &&  command.at(i - 1) != '|' && command.at(i - 1) != '&'))
+int exec(vector<string> cmd, bool ok, int counter, int count_p, bool paren_point, int paren_count, bool num_par, int size)
+{ 
+    char** ary = new char*[1024];    //creates new array to store the characters
+    for(int i = 0; i < size; i++)
+    {
+        char * temp = strdup(cmd.at(i).c_str());
+        ary[i] = temp;  
+    }
+    ary[size] = '\0'; 
+   
+    if(num_par == true)
+    {                                             
+        if((paren_point == false) && (counter != 2) && (paren_count != 2))      
+        {
+            return EXIT_FAILURE;   
+        }
+        if((paren_point == true) && (paren_count == 2))
+        {                  
+            return EXIT_FAILURE;
+        }
+    }
+        if((ok == false) && (count_p != 2))
+        {                          
+            return EXIT_FAILURE;             
+        }
+        if((ok == true) && (count_p == 2))
+        {                       
+            return 0;
+        }
+        if (strcmp(ary[0], "exit") == 0)
+        {                           
+            exit(0);                             
+        }
+        pid_t pid = fork();                        
+        if (pid == -1)
+        {                         
+            perror("fork");
+            return EXIT_FAILURE;
+        }
+        else if(pid == 0)
+        {  
+            if(execvp(ary[0], ary) == -1)
+            {        
+                perror("execvp");                   
+    	          exit(1);
+    	          return EXIT_FAILURE;
+            }
+        }
+        int status;          
+        if ( waitpid(pid, &status, 0) == -1 )
+        {     
+            perror("waitpid");
+            exit(1);
+            return EXIT_FAILURE;
+        }
+        if(WIFEXITED(status))
+        {               
+            const int exitflag = WEXITSTATUS(status);   
+    	    if(exitflag != 0)
+    	    {                           
+    		    return EXIT_FAILURE;
+            }
+        }
+    return EXIT_SUCCESS;                             
+}
 
-			{
-				empty_v.push_back(0); //0 means SPACE;
-			}
-		}
-	}	
-	return ;
+void Parse(vector<string> &command, int cmd_size, bool ok, bool pointer, 
+int point_count, bool paren_pointer, int Paren_count, int Paren_count_point, 
+int Paren_count_n, int &Par_size, bool in_paren)
+{
+    if(cmd_size < 1)
+    {  
+        return;
+    }
+    if((point_count == 3) && (in_paren != true))
+    {                      
+        paren_pointer = true;
+    }
+    
+    if(Par_size <= 0)
+    {
+        in_paren = false;
+        Par_size = 0;
+    }
+    
+    if(in_paren == false)
+    {
+        Paren_count_point = point_count; 
+    }
+    while(command.at(0).at(0) == '(')
+    {                   
+        in_paren = true;
+        Build(command, cmd_size, Par_size);               
+    }
+    
+    int P_size;                                      
+    string con;                               
+    
+    int point_count_p = point_count;                          
+    
+    unsigned i = 0;                                  
+    vector<string> tempvect;                              
+    
+    while((i < command.size()) && (command.at(i) != ";") && (command.at(i) != "||")                  
+    && (command.at(i) != "&&"))
+    {               
+        tempvect.push_back(command.at(i));
+        ++i;
+        P_size = i;
+    }
+    
+    string first = command.at(0);          
+    
+    if((first == ";") || (first == "||") || (first == "&&"))
+    {
+        command.erase(command.begin(), command.end());  
+        cout << "bash: syntax error near unexpected token '" <<  first << "'" << endl;
+        return;
+    }
+    
+    if(i == ((command.size())))
+    {          
+        con = "0";
+        point_count = 0;                        
+    }                                          
+    else if(command.at(i) == "&&")
+    {        
+        con = "&&";
+        point_count = 1;
+    }
+    else if(command.at(i) == "||")
+    {         
+        con = "||"; 
+        point_count = 2;
+    }
+    else if(command.at(i) == ";")
+    {        
+        con = ";";
+        point_count = 3;
+    }
+    
+    
+    if(P_size > 126)
+    {                             
+        cout << "Command too long" << endl;
+        return;
+    }
+    
+    int temp;
+    unsigned index = 0;
+    unsigned iterator = 0;
+    bool match = false;
+    bool p1 = false;
+    bool p2 = false;
+    bool if_test = true;
+    bool if_p = false;
+    
+    if(tempvect.at(0) == "]")
+    {
+        cout << "Error: no match bracket" << endl;
+        return;
+    }
+    if((tempvect.at(0) == "test") || (tempvect.at(0) == "["))
+    {
+        vector<string> Tempvec2 = tempvect;
+        if(tempvect.at(0) == "test")
+        {
+            if_test = true;
+            while(index < tempvect.size())
+            {
+                if(tempvect.at(index) == "[" || tempvect.at(index) == "]" )
+                {
+                    if_p = true;
+                    break;
+                }
+                ++index;
+            }
+        }
+        if(tempvect.at(0) == "[")
+        {
+            if_p = true;
+            if_test = false;
+            p1 = true;
+        }
+        while(iterator < tempvect.size())
+        {
+            if(tempvect.at(iterator) == "]")
+            {
+                if_p = true;
+                if_test = false;
+                p2 = true;
+                break;
+            }
+            ++iterator;
+        }
+        if(p1 && p2)
+        {
+            match = true;
+        }
+        if( (if_test == false && match == false) || 
+        (if_test == true && if_p == true) )
+        {
+            if(match == false)
+            {
+                cout << "Error: no match bracket" << endl;
+                return;
+            }
+        }
+        Tempvec2.erase(Tempvec2.begin());
+    
+        temp = test(Tempvec2, 0, ok, point_count, point_count_p, paren_pointer, Paren_count_point, in_paren);
+    
+    }
+    else
+    {
+        temp = exec(tempvect, ok, point_count, point_count_p, paren_pointer, Paren_count_point, in_paren, P_size);  
+    }
+    
+    pointer = ok;  
+    
+    if(temp == 0)
+    {
+        ok = true;
+    }
+    else
+    {
+        ok = false;
+    }
+    
+    if(in_paren != true)
+    {                           
+        Paren_count_n = point_count_p;
+    }
+    
+    if(in_paren != true)
+    {
+        paren_pointer = ok;
+    }
+    if(con == "0")
+    {      
+        command.erase(command.begin(), command.begin() + i);
+        if(in_paren == true)
+        {
+            Par_size = Par_size - i;
+            if(Par_size <= 0)
+            {
+                Paren_count_point = Paren_count_n;
+                Paren_count_n = 0;
+                paren_pointer = ok;
+            }
+        }
+    
+        ok = true;
+        Parse(command, command.size(), ok, pointer, point_count, paren_pointer, Paren_count, Paren_count_point,  Paren_count_n, Par_size, in_paren);
+    }
+    
+    if(con == "&&")
+    {    
+        command.erase(command.begin(), command.begin() + i + 1);
+        if(in_paren == true)
+        {
+            Par_size = Par_size - i - 1;
+            if(Par_size <= 0)
+            {
+                Paren_count_point = Paren_count_n;
+                Paren_count_n = 1;
+                paren_pointer = ok;
+            }
+        }
+    
+        Parse(command, command.size(), ok, pointer, point_count, paren_pointer, Paren_count, Paren_count_point,  Paren_count_n, Par_size, in_paren);
+    }
+    
+    if(con == "||")
+    {
+        command.erase(command.begin(), command.begin() + i + 1);
+        if(in_paren == true)
+        {
+            Par_size = Par_size - i - 1;
+            if(Par_size <= 0)
+            {
+                Paren_count_point = Paren_count_n;
+                Paren_count_n = 2;
+                paren_pointer = ok;
+            }
+        }
+    
+        if((pointer == true) && (point_count_p == 2))
+        {
+            ok = true;
+        }
+        Parse(command, command.size(), ok, pointer, point_count, paren_pointer, Paren_count, Paren_count_point, Paren_count_n, Par_size, in_paren);
+    }
+    
+    if(con == ";")
+    {                   
+        command.erase(command.begin(), command.begin() + i + 1);
+        if(in_paren == true)
+        {
+            Par_size = Par_size - i - 1;
+            if(Par_size <= 0)
+            {
+                Paren_count_point = Paren_count_n;
+                Paren_count_n = 3;
+                paren_pointer = ok;
+            }
+        }
+        ok = true;
+        Parse(command, command.size(), ok, pointer, point_count, paren_pointer, Paren_count, Paren_count_point, Paren_count_n, Par_size, in_paren);
+    }
+    return;
 }
 
 
-	 
-
-void getname()// this function is to get loginname and host name;
+bool check_bracket(vector<string> command)
 {
-	char* name;                    	
-	struct passwd* pass;
-	pass = getpwuid(getuid());
-	name = pass->pw_name;
-	printf("%s@", name);
-	
-	char host[1024];
-	host[1023] = '\0';
-	gethostname(host,1023);
-	printf("%s$ ", host);
-	return;
-}
-	
-void tokenizer(string command, vector<char*> &command_v)//this function push command_v with all the commands and parameter next to each other
-{	
-	char* temp;
-	/*for (int i = 0; i < command.size(); i++)
+    stack<char>check;
+	for(unsigned j = 0; j < command.size(); ++j)
 	{
-		temp[i] = command.at(i);
-	}*/
-	
-	temp = new char[command.size()];
-	strcpy(temp, command.c_str());
-	
-	char* pieces;
-	pieces = strtok(temp, " |&;");
-	while (pieces != NULL)
-	{
-		command_v.push_back(pieces);
-		pieces = strtok(NULL, " |&;");
+        for(unsigned i = 0; i < command.at(j).size(); ++i)
+        {
+    		if(command.at(j).at(i) == '(')
+    		{
+    			check.push(command.at(j).at(i));
+    		}
+    		else if(command.at(j).at(i) == ')')
+    		{
+    			if(check.empty())
+    			{
+    				return false;
+    			}
+    			else
+    			{
+    				check.pop();
+    			}	
+    		}
+        }
 	}
-	return;
-		
+	return check.empty() ? true:false;
 }
-int main()
+
+void getname() //get username and host name
 {
-	while (true)
-	//check if the command is exit, empty command, error command, single command, multiply command, or exit.
-	{	
-		string command;
-		getname();
-		getline(cin, command);
-		if (command == "exit")
-		{
-			cout << "Bye" << endl;
-			return 0;
-			
-		}	
+    char* name;
+    struct passwd* pass;
+    pass = getpwuid(getuid());
+    name = pass->pw_name;
+    printf("%s@", name);
+    
+    char host[1024];
+    host[1023] = '\0';
+    gethostname(host, 1023);
+    printf("%s$ ", host);
+    return;
+}
 
-		else if (!command.empty()) //check to see if it is a empty command, if it is not, continue.
-		{	
-			vector <int> connector_v; //vector to store connectors representation number
-			int counter = 0; //to see if there is any -1 in the connector vector, if there is, give out a error message.
-			vector <char*> command_v; //vector to store the commands next to each other individually
-			
-			con_vec(command, connector_v);
+int main(){
+    vector<string> command;                                                             //vector to hold our string
+    string str_command;                                                                     //will simply be our input string
+    int size = 0;
 
-			for (unsigned i = 0; i < connector_v.size(); i++) 
-			{
-				if (connector_v.at(i) == -1)
-				{
-					counter = -1;
-				}
-				//cout << connector_v.at(i) << " ";
-			}
-
-			if (counter != -1) //see if it is error command, if not, continue. now the command must be either single or multiply
-			{
-				if (command.find('#') != string::npos) //trim everything after #, including #
-				{
-					command.erase(command.find('#'), (command.size() - command.find('#')));
-				}
-		
-				tokenizer(command,command_v); //call tokenizer to break the string apart.
-
-				if(connector_v.empty()) //check to see if it is a single command, if yes, run it and return back
-				{
-					vector <char*> noconnect_v;
-					noconnect_v.push_back(command_v.at(0));
-					noconnect_v.push_back(NULL);
-					char** noconnect;
-					noconnect = &noconnect_v[0];
-					pid_t pid = fork();
-					if(pid == 0)
-					{
-						if(execvp(noconnect[0], noconnect) == -1)
-						{
-							perror("exec");
-						}
-						exit(0);
-					}
-					if (pid > 0)
-					{
-						if (wait(0) == -1)
-						{
-							perror("wait");
-						}
-					}
-				}
-				else //now this is multiply command
-				{
-					int status = 0;
-					bool firstcommand = true;
-					vector<char*> temp_v;
-					unsigned j = 0; // it is to keep track of command_v
-					temp_v.push_back(command_v.at(j)); //push back the first command anyways
-					j++;
-					char** temp_com;
-					for (unsigned i = 0; ((i < connector_v.size()) && (j < command_v.size())); i++)
-					{		
-						if (connector_v.at(i) == 0)
-						{
-							temp_v.push_back(command_v.at(j)); //if it is space, add the next command as the parameter
-							j++;
-						}
-						else if (connector_v.at(i) == 1)
-						{
-							if (firstcommand)
-							{
-								temp_v.push_back(NULL);
-								temp_com = &temp_v[0];
-								pid_t pid = fork();
-								if(pid == 0)
-								{
-									if(execvp(temp_com[0], temp_com) == -1)
-									{
-										status = -1;
-										perror("exec");
-									}
-									exit(0);
-								}
-								if (pid > 0)
-								{
-									if (wait(0) == -1)
-									{
-										perror("wait");
-									}
-								}
-	
-								firstcommand = false;
-								temp_v.clear();
-							}
-
-							if (status == -1)
-							{
-								if (connector_v.at(i + 1) == 0)
-								{	
-									temp_v.push_back(command_v.at(j)); //if it is space after, add the next command as the parameter
-									j++;
-									firstcommand = true;
-								}
-								else
-								{
-									temp_v.clear();
-									temp_v.push_back(command_v.at(j));
-									temp_v.push_back(NULL);
-									j++;
-									temp_com = &temp_v[0];
-									pid_t pid = fork();
-									if(pid == 0)
-									{
-										if(execvp(temp_com[0], temp_com) == -1)
-										{
-											status = -1;
-											perror("exec");
-										}
-										exit(0);
-									}
-									if (pid > 0)
-									{
-										if (wait(0) == -1)
-										{
-											perror("wait");
-										}
-									} // run the next command, and set the status
-									temp_v.clear();
-								}
-							}
-							else if (status != -1)
-							{	
-								if (i != connector_v.size() - 1)
-								{
-									if (connector_v.at(i + 1) == 0)
-									{
-										unsigned f = i + 1;
-										unsigned count = 0;
-										while (connector_v.at(f) == 0)
-										{	
-											++f;
-											++count;
-										}
-										i = i + count;
-										j = j + count + 1;
-													
-									}
-								}
-								else
-								{
-									j++;
-								}
-							}
-						}
-						else if (connector_v.at(i) == 2)
-						{
-							if (firstcommand)
-							{
-								temp_v.push_back(NULL);
-								temp_com = &temp_v[0]; //if it is the first command 
- 								pid_t pid = fork();
-								if(pid == 0)
-								{
-									if(execvp(temp_com[0], temp_com) == -1)
-									{
-										status = -1;
-										perror("exec");
-									}
-									exit(0);
-								}
-								if (pid > 0)
-								{
-									if (wait(0) == -1)
-									{
-										perror("wait");
-									}
-								}//run commmand in the temp_v, no need to check status
-								firstcommand = false;
-								temp_v.clear();
-							}
-							
-							if (i != connector_v.size() - 1)
-							{
-								if (connector_v.at(i + 1) == 0)
-								{
-									temp_v.push_back(command_v.at(j)); //if it is space after, add the next command as the parameter
-									j++;
-									firstcommand = true;
-								}
-							}
-							else
-							{
-								temp_v.clear();
-								temp_v.push_back(command_v.at(j));
-								temp_v.push_back(NULL);
-								j++;
-								temp_com = &temp_v[0];
-								pid_t pid = fork();
-								if(pid == 0)
-								{
-									if(execvp(temp_com[0], temp_com) == -1)
-									{
-										status = -1;
-										perror("exec");
-									}
-
-									exit(0);
-								}
-								if (pid > 0)
-								{
-									if (wait(0) == -1)
-									{
-										perror("wait");
-									}
-								} //run the next command, and set the status
-								temp_v.clear();			
-							}
-						}
-						else if (connector_v.at(i) == 3)
-						{
-							if (firstcommand)
-							{
-								temp_v.push_back(NULL);
-								temp_com = &temp_v[0];
-								
-								pid_t pid = fork();
-								if(pid == 0)
-								{
-									if(execvp(temp_com[0], temp_com) == -1)
-									{
-										status = -1;
-										perror("exec");
-									}
-
-									exit(0);
-								}
-								if (pid > 0)
-								{
-									if (wait(0) == -1)
-									{
-										perror("wait");
-									}
-								}
-								firstcommand = false;
-								temp_v.clear();
-							}
-
-							if (status != -1)
-							{
-								if (i != connector_v.size() - 1)
-								{
-									if (connector_v.at(i + 1) == 0)
-									{
-										temp_v.push_back(command_v.at(j)); //if it is space after, add the next command as the parameter
-										j++;
-										firstcommand = true;
-									}
-								}
-								else
-								{
-									temp_v.clear();
-									temp_v.push_back(command_v.at(j));
-									temp_v.push_back(NULL);
-									j++;
-									temp_com = &temp_v[0];
-									pid_t pid = fork();
-									if(pid == 0)
-									{
-										if(execvp(temp_com[0], temp_com) == -1)
-										{
-											status = -1;
-											perror("exec");
-										}
-										exit(0);
-									}
-									if (pid > 0)
-									{
-										if (wait(0) == -1)
-										{
-											perror("wait");
-										}
-									} // run the next command, and set the status
-									temp_v.clear();
-								}
-							}
-							else if (status == -1)
-							{	
-								if (i != connector_v.size() - 1)
-								{
-									if (connector_v.at(i + 1) == 0)
-									{
-										unsigned f = i + 1;
-										unsigned count = 0;
-										while (connector_v.at(f) == 0)
-										{	
-											++f;
-											++count;
-										}
-										i = i + count;
-										j = j + count + 1;
-									}
-								}
-								else
-								{
-									j++;
-								}
-							}
-						}
-					}
-
-					if(!temp_v.empty())
-					{
-						temp_v.push_back(NULL);//if thiere isnt any other connecter beside space, just run all of them.
-						temp_com = &temp_v[0];
-						pid_t pid = fork();
-						if(pid == 0)
-						{
-							if(execvp(temp_com[0], temp_com) == -1)
-							{
-								perror("exec");
-							}
-							exit(0);
-						}
-						if (pid > 0)
-						{	
-							if (wait(0) == -1)
-							{
-								perror("wait");
-							}
-						}
-						temp_v.clear();
-					}
-				}
-			}
-			else
-			{
-				cout << "Cannot run the command becasue it has error in it, re-enter your command" << endl;
-			}
-		}
-		else
-		{
-			cout << "Error, empty command, re_enter your command" << endl;
-		}
-	}
-
-	return 0;
-}	
-	
+    while(1)
+    {
+        getname();                                                             
+        getline(cin, str_command);                                                          
+        if (str_command.find('#') != string::npos) //trim everything after #, including #
+        {
+            str_command.erase(str_command.find('#'), (str_command.size() - str_command.find('#')));
+        }
+        char_separator<char> deliminator(" ", ";");                                   // parameters for our input
+        tokenizer< char_separator<char> > mytok(str_command, deliminator);
+        
+        for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); ++it)
+        {
+            command.push_back(*it);                                                       
+        }
+    
+        bool nomatch = check_bracket(command);                                              
+        if(nomatch == false)
+        {
+            cout << "Error, bracket are not match" << endl;
+            command.clear();
+        }
+         Parse(command, command.size(), 1, 0, 0, 1, 0, 0, 0, size, 0);                          
+    }
+    
+    return 0;
+}
