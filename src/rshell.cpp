@@ -65,7 +65,7 @@ void Build(vector<string> &cmd_parent, int &size, int &s) // make the parenthesi
     return;
 }
     
-int checkFlag(vector<string> &cmd)
+int checkFlag(vector<string> &cmd)//check the flage for test function 
 {                     
     int counter = 0;
     if(cmd.at(0) == "-e"){
@@ -86,30 +86,26 @@ int checkFlag(vector<string> &cmd)
 }
 
 int test(vector<string> ParsedString, unsigned index, bool c, int con, int p_count, bool parent_point, int parent_counter_p, bool in_par){
-if(in_par == true){                                         //checks paranthesis
+if(in_par == true){                                         //check parenthesis
     
-    if((parent_point == false) && (con != 2) && (parent_counter_p != 2))  //Case
+    if((parent_point == false) && (con != 2) && (parent_counter_p != 2))  
     {
         return 1;   
     }
-    if((parent_point == true) && (parent_counter_p == 2)){                //Case
+    if((parent_point == true) && (parent_counter_p == 2)){                
         return 1;
     }
 }
-   if((c == false) && (p_count != 2)){                        //Case
+   if((c == false) && (p_count != 2)){                        
         return 1;             
     }
-    if((c == true) && (p_count == 2)){                        //Case
+    if((c == true) && (p_count == 2)){                        
       return 0;
     }
-    int flag = checkFlag(ParsedString);                     //get flag
+    int flag = checkFlag(ParsedString);                     //get flag from check flag
     unsigned end = ParsedString.size();
     if(index > 0){
        end = index;
-    }
-    // check what's in vector
-    for(unsigned i = 0; i < end; ++i){
-        //cout << ParsedString.at(i) << ' ';
     }
 
     char *path;
@@ -126,7 +122,7 @@ if(in_par == true){                                         //checks paranthesis
         }
     }
     else if(flag == 2){
-        if((stat(path, &s) == 0) && (s.st_mode & S_IFREG)){     //file               
+        if((stat(path, &s) == 0) && (s.st_mode & S_IFREG)){                
             cout << "(TRUE)" << endl;
             return 0;
         }
@@ -136,7 +132,7 @@ if(in_par == true){                                         //checks paranthesis
         }
     }
     else if(flag == 3){
-        if((stat(path, &s) == 0) && (s.st_mode & S_IFDIR)){    //directory
+        if((stat(path, &s) == 0) && (s.st_mode & S_IFDIR)){   
             cout << "(TRUE)" << endl;
             return 0;
         }
@@ -217,11 +213,11 @@ int exec(vector<string> cmd, bool ok, int counter, int count_p, bool paren_point
     return EXIT_SUCCESS;                             
 }
 
-void Parse(vector<string> &command, int cmd_size, bool ok, bool pointer, 
+void Parse(vector<string> &command, int cmd_size, bool ok, bool pointer, // Parsing Algorithm 
 int point_count, bool paren_pointer, int Paren_count, int Paren_count_point, 
 int Paren_count_n, int &Par_size, bool in_paren)
 {
-    if(cmd_size < 1)
+    if(cmd_size < 1)// if command is empty, return, but keep goin
     {  
         return;
     }
@@ -465,29 +461,29 @@ int Paren_count_n, int &Par_size, bool in_paren)
 }
 
 
-bool check_bracket(vector<string> command)
+bool check_bracket(vector<string> command)//check if the brackets are matching
 {
-    stack<char>check;
+	stack<char>check;
 	for(unsigned j = 0; j < command.size(); ++j)
 	{
-        for(unsigned i = 0; i < command.at(j).size(); ++i)
-        {
-    		if(command.at(j).at(i) == '(')
-    		{
-    			check.push(command.at(j).at(i));
-    		}
-    		else if(command.at(j).at(i) == ')')
-    		{
-    			if(check.empty())
+ 	       for(unsigned i = 0; i < command.at(j).size(); ++i)
+        	{
+    			if(command.at(j).at(i) == '(')
     			{
-    				return false;
+    				check.push(command.at(j).at(i));
     			}
-    			else
+    			else if(command.at(j).at(i) == ')')
     			{
-    				check.pop();
-    			}	
-    		}
-        }
+    				if(check.empty())
+    				{
+    					return false;
+    				}
+    				else
+    				{
+    					check.pop();
+    				}	
+    			}
+ 	       }
 	}
 	return check.empty() ? true:false;
 }
@@ -508,8 +504,8 @@ void getname() //get username and host name
 }
 
 int main(){
-    vector<string> command;                                                             //vector to hold our string
-    string str_command;                                                                     //will simply be our input string
+    vector<string> command; //vectore to store command
+    string str_command;
     int size = 0;
 
     while(1)
@@ -520,7 +516,7 @@ int main(){
         {
             str_command.erase(str_command.find('#'), (str_command.size() - str_command.find('#')));
         }
-        char_separator<char> deliminator(" ", ";");                                   // parameters for our input
+        char_separator<char> deliminator(" ", ";");                                   // tokenizer
         tokenizer< char_separator<char> > mytok(str_command, deliminator);
         
         for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); ++it)
