@@ -1,3 +1,3 @@
 #!/bin/sh
 
-../bin/rhsell < test_function.txt
+../bin/rshell < test_function.txt
